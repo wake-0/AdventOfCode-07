@@ -15,7 +15,11 @@ public class Main {
         main.run();
     }
 
-    record SimpleFile(String name, Long size) {}
+    record SimpleFile(String name, Long size) {
+    }
+
+    record SimpleDir(String dir, Long size) {
+    }
 
     final String path = "TODO";
     Map<String, List<SimpleFile>> filesInDir = new HashMap<>();
@@ -31,7 +35,9 @@ public class Main {
             String dir = "";
             String line;
             while ((line = br.readLine()) != null) {
-                if (line.equals("$ cd /") || line.equals("$ ls") || line.startsWith("dir")) { continue; }
+                if (line.equals("$ cd /") || line.equals("$ ls") || line.startsWith("dir")) {
+                    continue;
+                }
 
                 if (line.equals("$ cd ..")) {
                     final int lastSlash = dir.lastIndexOf("/");
@@ -63,23 +69,28 @@ public class Main {
                         files.add(simpleFile);
 
                         int lastSlash = subDir.lastIndexOf("/");
-                        if (lastSlash == -1) { break; }
+                        if (lastSlash == -1) {
+                            break;
+                        }
                         subDir = subDir.substring(0, lastSlash);
-                    } while(true);
+                    } while (true);
                 } catch (NumberFormatException ex) { /* no file */ }
             }
         }
     }
 
     void printSize() {
-        Long sum = this.filesInDir.keySet()
+        final Long unusedSpace = 70000000L - 42558312L;
+        this.filesInDir.keySet()
                 .stream().map(dir -> {
                     Long size = filesInDir.get(dir).stream().map(SimpleFile::size).reduce(Long::sum).get();
-                    System.out.printf("%s: %s\n", dir, size);
-                    return size;
-                })
-                .filter(size -> size <= 100000)
-                .reduce(Long::sum).get();
-        System.out.println(sum);
+                    return new SimpleDir(dir, size);
+                }).filter(dir -> (unusedSpace + dir.size) >= 30000000)
+                .forEach(dir -> {
+                    Long newSpace = unusedSpace + dir.size;
+                    System.out.printf("%s: %s --> %s\n", dir.dir, dir.size, newSpace);
+                });
+
+        // Search by hand, which value fits best xD
     }
 }
